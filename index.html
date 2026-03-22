@@ -14,7 +14,7 @@ style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:ce
 
 
 <div class="slider-wrap">
-	<input id="rotationSlider" class="fancy-slider" type="range" min="0" max="180" value="90" aria-label="Rotation">
+	<input id="rotationSlider" class="fancy-slider" type="range" min="0" max="180" value="0" aria-label="Rotation">
 
 </div>
 
@@ -38,8 +38,8 @@ style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:ce
 	let wasInRange = true;
 	let _upTimer = null;
 	let isRotating = false;
-	let rotationAngle = 90; 
-	let lastRotationAngle = 90;
+	let rotationAngle = 0;
+	let lastRotationAngle = 0;
 	let _downTimer = null;
 		let _groanDelayTimer = null;
 	let rotStartX = 0;
@@ -65,7 +65,7 @@ style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:ce
 						try { img.src = 'assets/down.webp'; } catch (e) { }
 						
 						if (_groanDelayTimer) { clearTimeout(_groanDelayTimer); _groanDelayTimer = null; }
-						_groanDelayTimer = setTimeout(() => { try { playGroanAudio(); } catch (e) {} _groanDelayTimer = null; }, 2000);
+						_groanDelayTimer = setTimeout(() => { try { playGroanAudio(); } catch (e) {} _groanDelayTimer = null; }, 1000);
 						_downTimer = setTimeout(() => { try { img.src = 'assets/groan1.png'; } catch (e) { } _downTimer = null; }, 2000);
 					} else if (sval !== 0) {
 						sliderWasZero = false;
