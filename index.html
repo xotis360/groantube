@@ -36,9 +36,29 @@
 	.fancy-slider::-moz-range-track{height:22px;background:rgba(0,0,0,0.14);border-radius:12px}
 	.fancy-slider::-moz-range-thumb{width:68px;height:68px;background:#fff;border:2px solid #888;border-radius:50%}
 }
+
+#mobileNotice{display:none}
+@media (max-width:600px), (pointer:coarse) {
+	#mobileNotice{
+		display:flex;
+		position:fixed;
+		inset:0;
+		align-items:center;
+		justify-content:center;
+		background:rgba(0,0,0,0.85);
+		color:#fff;
+		padding:24px;
+		text-align:center;
+		font-size:5vw;
+		line-height:1.2;
+		z-index:2000;
+	}
+	#mobileNotice strong{font-size:1.1em}
+}
 </style>
 </head>
 <body>
+<div id="mobileNotice" role="alert">This site currently only works on desktop — work in progress... sorry!</div>
 <img id="toggleImage"
 src="assets/groan1.png"
 style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:center center; transform:translate(-50%,-50%) rotate(0deg); width:600px; max-width:80vw;">
