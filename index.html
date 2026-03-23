@@ -3,6 +3,40 @@
 <head>
 <title>groanube</title>
 <link rel="stylesheet" href="style.css">
+<style>
+@media (max-width:600px), (pointer:coarse) {
+	.slider-wrap{
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		top: calc(50% + 26vw);
+		padding: 4px;
+		z-index: 1000;
+		touch-action: none;
+	}
+	.fancy-slider{
+		width: 86vw;
+		height: 40px;
+		-webkit-appearance: none;
+		background: transparent;
+		margin: 2px;
+	}
+	.fancy-slider:focus{outline:none}
+	.fancy-slider::-webkit-slider-runnable-track{
+		height:22px;
+		background:rgba(0,0,0,0.14);
+		border-radius:12px;
+	}
+	.fancy-slider::-webkit-slider-thumb{
+		-webkit-appearance:none;
+		width:68px;height:68px;margin-top:-23px;
+		background:#fff;border:2px solid #888;border-radius:50%;
+		box-shadow:0 4px 10px rgba(0,0,0,0.42);
+	}
+	.fancy-slider::-moz-range-track{height:22px;background:rgba(0,0,0,0.14);border-radius:12px}
+	.fancy-slider::-moz-range-thumb{width:68px;height:68px;background:#fff;border:2px solid #888;border-radius:50%}
+}
+</style>
 </head>
 <body>
 <img id="toggleImage"
