@@ -1,70 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>groanube</title>
+<title>groantube - wee waah site</title>
 <link rel="stylesheet" href="style.css">
 <style>
-@media (max-width:600px), (pointer:coarse) {
-	.slider-wrap{
-		position: absolute;
-		left: 50%;
-		transform: translateX(-50%);
-		top: calc(50% + 26vw);
-		padding: 4px;
-		z-index: 1000;
-		touch-action: none;
-	}
-	.fancy-slider{
-		width: 86vw;
-		height: 40px;
-		-webkit-appearance: none;
-		background: transparent;
-		margin: 2px;
-	}
-	.fancy-slider:focus{outline:none}
-	.fancy-slider::-webkit-slider-runnable-track{
-		height:22px;
-		background:rgba(0,0,0,0.14);
-		border-radius:12px;
-	}
-	.fancy-slider::-webkit-slider-thumb{
-		-webkit-appearance:none;
-		width:68px;height:68px;margin-top:-23px;
-		background:#fff;border:2px solid #888;border-radius:50%;
-		box-shadow:0 4px 10px rgba(0,0,0,0.42);
-	}
-	.fancy-slider::-moz-range-track{height:22px;background:rgba(0,0,0,0.14);border-radius:12px}
-	.fancy-slider::-moz-range-thumb{width:68px;height:68px;background:#fff;border:2px solid #888;border-radius:50%}
-}
-
-#mobileNotice{display:none}
-@media (max-width:600px), (pointer:coarse) {
-	#mobileNotice{
-		display:flex;
-		position:fixed;
-		inset:0;
-		align-items:center;
-		justify-content:center;
-		background:rgba(0,0,0,0.85);
-		color:#fff;
-		padding:24px;
-		text-align:center;
-		font-size:5vw;
-		line-height:1.2;
-		z-index:2000;
-	}
-	#mobileNotice strong{font-size:1.1em}
+.mobile .slider-wrap{display:none}
+.mobile #toggleImage{
+	cursor:pointer;
+	touch-action:manipulation;
+	-webkit-tap-highlight-color:transparent;
+	user-select:none;
 }
 </style>
 </head>
 <body>
-<div id="mobileNotice" role="alert">This site currently only works on desktop — work in progress... sorry!</div>
 <img id="toggleImage"
 src="assets/groan1.png"
 style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:center center; transform:translate(-50%,-50%) rotate(0deg); width:600px; max-width:80vw;">
 
-			<audio id="groanAudio" src="assets/groan1.mp3"></audio>
-			<audio id="groan2Audio" src="assets/groan2.mp3"></audio>
+			<audio id="groanAudio" src="assets/groan1.mp3" preload="auto" playsinline></audio>
+			<audio id="groan2Audio" src="assets/groan2.mp3" preload="auto" playsinline></audio>
 
 
 <div class="slider-wrap">
@@ -72,137 +27,191 @@ style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:ce
 
 </div>
 
-<script>
-		function playGroanAudio(){
-			const g = document.getElementById('groanAudio');
-			if(!g) return;
-			try{ g.currentTime = 0; g.play(); }catch(e){}
-		}
+<footer class="site-footer">developer: Xotis360</footer>
 
-		function playGroan2Audio(){
-			const g = document.getElementById('groan2Audio');
-			if(!g) return;
-			try{ g.currentTime = 0; g.play(); }catch(e){}
-		}
+<script>
+function playAudio(audioEl) {
+	if (!audioEl) return;
+	try { audioEl.currentTime = 0; audioEl.play(); } catch (e) {}
+}
+
+function playGroanAudio(){
+	playAudio(document.getElementById('groanAudio'));
+}
+
+function playGroan2Audio(){
+	playAudio(document.getElementById('groan2Audio'));
+}
+
 (function() {
 	const img = document.getElementById('toggleImage');
 	const slider = document.getElementById('rotationSlider');
-	let sliderWasZero = false;
-	let sliderWasMax = false;
-	let wasInRange = true;
-	let _upTimer = null;
-	let isRotating = false;
-	let rotationAngle = 0;
-	let lastRotationAngle = 0;
-	let _downTimer = null;
-		let _groanDelayTimer = null;
-	let rotStartX = 0;
-	let rotStartAngle = 0;
-	let rotationTriggered = false;
+	const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+	if (isMobile) {
+		document.body.classList.add('mobile');
+	}
 
-	function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+	function clamp(v, a, b) {
+		return Math.max(a, Math.min(b, v));
+	}
 
-	function applyRotation() {
-		let base = 'translate(-50%,-50%) rotate(' + rotationAngle + 'deg)';
-		if (img.classList.contains('flipped')) base += ' scaleX(-1)';
-		img.style.transform = base;
-		checkHalfRotation();
-		if (slider) {
+	function clearTimer(timerRef) {
+		if (timerRef) clearTimeout(timerRef);
+		return null;
+	}
+
+	function initDesktop() {
+		let sliderWasZero = false;
+		let sliderWasMax = false;
+		let wasInRange = true;
+		let upTimer = null;
+		let isRotating = false;
+		let rotationAngle = 0;
+		let downTimer = null;
+		let groanDelayTimer = null;
+		let rotStartX = 0;
+		let rotStartAngle = 0;
+		let rotationTriggered = false;
+
+		function checkHalfRotation() {
+			const norm = ((rotationAngle % 360) + 360) % 360;
+			const tol = 5;
+			const near180 = norm >= 180 - tol && norm <= 180 + tol;
+			if (!rotationTriggered && near180) {
+				rotationTriggered = true;
+			} else if (rotationTriggered && (norm < 170 || norm > 190)) {
+				rotationTriggered = false;
+			}
+		}
+
+		function applyRotation() {
+			let base = 'translate(-50%,-50%) rotate(' + rotationAngle + 'deg)';
+			if (img.classList.contains('flipped')) base += ' scaleX(-1)';
+			img.style.transform = base;
+			checkHalfRotation();
+			if (!slider) return;
+
 			const norm = clamp(rotationAngle, 0, 180);
 			slider.value = Math.round(norm);
 			const sval = Number(slider.value);
-		
-					if (sval === 0 && !sliderWasZero) {
-						sliderWasZero = true;
-						if (_downTimer) { clearTimeout(_downTimer); _downTimer = null; }
-						
-						try { img.src = 'assets/down.webp'; } catch (e) { }
-						
-						if (_groanDelayTimer) { clearTimeout(_groanDelayTimer); _groanDelayTimer = null; }
-						_groanDelayTimer = setTimeout(() => { try { playGroanAudio(); } catch (e) {} _groanDelayTimer = null; }, 1000);
-						_downTimer = setTimeout(() => { try { img.src = 'assets/groan1.png'; } catch (e) { } _downTimer = null; }, 2000);
-					} else if (sval !== 0) {
-						sliderWasZero = false;
-						if (_downTimer) { clearTimeout(_downTimer); _downTimer = null; }
-						if (_groanDelayTimer) { clearTimeout(_groanDelayTimer); _groanDelayTimer = null; }
-					}
 
-					if (wasInRange && sval > 92) {
+			if (sval === 0 && !sliderWasZero) {
+				sliderWasZero = true;
+				downTimer = clearTimer(downTimer);
+				try { img.src = 'assets/down.webp'; } catch (e) {}
+				groanDelayTimer = clearTimer(groanDelayTimer);
+				groanDelayTimer = setTimeout(() => {
+					try { playGroanAudio(); } catch (e) {}
+					groanDelayTimer = null;
+				}, 1000);
+				downTimer = setTimeout(() => {
+					try { img.src = 'assets/groan1.png'; } catch (e) {}
+					downTimer = null;
+				}, 2000);
+			} else if (sval !== 0) {
+				sliderWasZero = false;
+				downTimer = clearTimer(downTimer);
+				groanDelayTimer = clearTimer(groanDelayTimer);
+			}
+
+			if (wasInRange && sval > 92) {
 				wasInRange = false;
-						if (_upTimer) { clearTimeout(_upTimer); _upTimer = null; }
-						if (_downTimer) { clearTimeout(_downTimer); _downTimer = null; }
-						if (_groanDelayTimer) { clearTimeout(_groanDelayTimer); _groanDelayTimer = null; }
-						try { img.src = 'assets/upgran.webp'; } catch (e) {}
-						
-						_downTimer = setTimeout(() => { try { img.src = 'assets/rage.jpeg'; } catch (e) {} _downTimer = null; }, 1050);
+				upTimer = clearTimer(upTimer);
+				downTimer = clearTimer(downTimer);
+				groanDelayTimer = clearTimer(groanDelayTimer);
+				try { img.src = 'assets/upgran.webp'; } catch (e) {}
+				downTimer = setTimeout(() => {
+					try { img.src = 'assets/rage.jpeg'; } catch (e) {}
+					downTimer = null;
+				}, 1050);
 			} else if (!wasInRange && sval <= 92) {
 				wasInRange = true;
-						if (_upTimer) { clearTimeout(_upTimer); _upTimer = null; }
-						if (_downTimer) { clearTimeout(_downTimer); _downTimer = null; }
-						if (_groanDelayTimer) { clearTimeout(_groanDelayTimer); _groanDelayTimer = null; }
+				upTimer = clearTimer(upTimer);
+				downTimer = clearTimer(downTimer);
+				groanDelayTimer = clearTimer(groanDelayTimer);
 			}
 
 			if (sval === 180 && !sliderWasMax) {
 				sliderWasMax = true;
-				if (_groanDelayTimer) { clearTimeout(_groanDelayTimer); _groanDelayTimer = null; }
+				groanDelayTimer = clearTimer(groanDelayTimer);
 				try { playGroan2Audio(); } catch (e) {}
 			} else if (sval !== 180) {
 				sliderWasMax = false;
 			}
 		}
-		
-	}
 
-	function checkHalfRotation() {
-		const norm = ((rotationAngle % 360) + 360) % 360;
-		const tol = 5;
-		const near180 = (norm >= 180 - tol && norm <= 180 + tol);
-		if (!rotationTriggered && near180) {
-			rotationTriggered = true;
-		} else if (rotationTriggered && (norm < 180 - 10 || norm > 180 + 10)) {
-			rotationTriggered = false;
-		}
-	}
+		img.addEventListener('mousedown', (e) => {
+			if (e.altKey) {
+				isRotating = true;
+				rotStartX = e.clientX;
+				rotStartAngle = rotationAngle;
+				img.style.cursor = 'crosshair';
+				e.preventDefault();
+			}
+		});
 
-	img.addEventListener('mousedown', (e) => {
-		if (e.altKey) {
-			isRotating = true;
-			rotStartX = e.clientX;
-			rotStartAngle = rotationAngle;
-			img.style.cursor = 'crosshair';
-			e.preventDefault();
-		}
-	});
-
-	window.addEventListener('mousemove', (e) => {
-		if (!isRotating) return;
-		const dx = e.clientX - rotStartX;
-		rotationAngle = clamp(rotStartAngle + dx * 0.5, 0, 180);
-		applyRotation();
-	});
-
-	window.addEventListener('mouseup', () => {
-		if (!isRotating) return;
-		isRotating = false;
-		img.style.cursor = 'default';
-	});
-
-	img.addEventListener('wheel', (e) => {
-		e.preventDefault();
-		const delta = e.deltaY > 0 ? 5 : -5;
-		rotationAngle = clamp(rotationAngle + delta, 0, 180);
-		applyRotation();
-	}, {passive:false});
-
-	if (slider) {
-		slider.addEventListener('input', (e) => {
-			rotationAngle = clamp(parseFloat(e.target.value) || 0, 0, 180);
+		window.addEventListener('mousemove', (e) => {
+			if (!isRotating) return;
+			const dx = e.clientX - rotStartX;
+			rotationAngle = clamp(rotStartAngle + dx * 0.5, 0, 180);
 			applyRotation();
 		});
+
+		window.addEventListener('mouseup', () => {
+			if (!isRotating) return;
+			isRotating = false;
+			img.style.cursor = 'default';
+		});
+
+		img.addEventListener('wheel', (e) => {
+			e.preventDefault();
+			const delta = e.deltaY > 0 ? 5 : -5;
+			rotationAngle = clamp(rotationAngle + delta, 0, 180);
+			applyRotation();
+		}, {passive:false});
+
+		if (slider) {
+			slider.addEventListener('input', (e) => {
+				rotationAngle = clamp(parseFloat(e.target.value) || 0, 0, 180);
+				applyRotation();
+			});
+		}
+
+		applyRotation();
 	}
 
-	applyRotation();
+	/* Mobile shit */
+	function initMobile() {
+		let mobileTapAltState = false;
+		let lastTapAt = 0;
 
+		const handleTap = (e) => {
+			if (e) e.preventDefault();
+			const now = Date.now();
+			if (now - lastTapAt < 120) return;
+			lastTapAt = now;
+			mobileTapAltState = !mobileTapAltState;
+			img.src = mobileTapAltState ? 'assets/groan2.png' : 'assets/groan1.png';
+			if (mobileTapAltState) {
+				playGroan2Audio();
+			} else {
+				playGroanAudio();
+			}
+		};
+
+		if (window.PointerEvent) {
+			img.addEventListener('pointerup', handleTap, {passive:false});
+		} else {
+			img.addEventListener('touchend', handleTap, {passive:false});
+			img.addEventListener('click', handleTap, {passive:false});
+		}
+	}
+
+	if (isMobile) {
+		initMobile();
+	} else {
+		initDesktop();
+	}
 })();
 </script>
 </body>
