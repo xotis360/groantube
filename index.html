@@ -2,24 +2,137 @@
 <html>
 <head>
 <title>groantube - wee waah site</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
+body{
+	margin:0;
+	min-height:100vh;
+	overflow:hidden;
+	background:#fff;
+	font-family:sans-serif;
+}
+.sidebar{
+	position:fixed;
+	left:0;
+	top:0;
+	bottom:0;
+	display:flex;
+	flex-direction:column;
+	width:190px;
+	box-sizing:border-box;
+	padding:18px;
+	overflow:hidden;
+	background:#efefef;
+	border-right:2px solid #111;
+	z-index:5;
+}
+.sidebar-title{
+	font-weight:700;
+	font-size:18px;
+}
+.sidebar-subtitle{
+	margin-top:5px;
+	font-size:13px;
+}
+.sidebar-list{
+	flex:1;
+	min-height:0;
+	margin:16px 0;
+	padding:0;
+	list-style:none;
+	overflow-y:auto;
+}
+.sidebar-item + .sidebar-item{
+	margin-top:10px;
+}
+.sidebar-img{
+	display:block;
+	width:100%;
+	height:68px;
+	object-fit:contain;
+	object-position:center;
+}
+.slider-wrap{
+	position:fixed;
+	left:50%;
+	bottom:28px;
+	transform:translateX(-50%);
+	width:min(420px, calc(100vw - 250px));
+}
+.fancy-slider{
+	width:100%;
+}
+.site-footer{
+	position:fixed;
+	right:18px;
+	bottom:16px;
+	font-size:12px;
+}
 .mobile .slider-wrap{display:none}
-.mobile #toggleImage{
+	.mobile #toggleImage{
 	cursor:pointer;
 	touch-action:manipulation;
 	-webkit-tap-highlight-color:transparent;
 	user-select:none;
 }
+.miku-mode-button{
+	position:fixed;
+	right:18px;
+	top:50%;
+	transform:translateY(-50%);
+	z-index:10;
+	padding:12px 10px;
+	border:2px solid #39d8c8;
+	border-radius:6px;
+	background:#111b20;
+	color:#e9ffff;
+	font:700 14px/1.1 sans-serif;
+	letter-spacing:0;
+	cursor:pointer;
+	touch-action:manipulation;
+	-webkit-tap-highlight-color:transparent;
+	writing-mode:vertical-rl;
+	text-orientation:mixed;
+}
+.miku-mode-button:hover,
+.miku-mode-button:focus-visible{
+	background:#1c5e62;
+	outline:3px solid #f2e75e;
+	outline-offset:3px;
+}
+.miku-mode-button[aria-pressed="true"]{
+	background:#39d8c8;
+	border-color:#e9ffff;
+	color:#102329;
+}
+.mobile .miku-mode-button{
+	right:10px;
+}
+.mobile .sidebar,
+.mobile .site-footer{
+	display:none;
+}
 </style>
 </head>
 <body>
+<aside class="sidebar">
+	<div class="sidebar-title">groantube amount</div>
+	<div class="sidebar-subtitle">preset of groantube amount</div>
+	<ul class="sidebar-list">
+		<li class="sidebar-item"><img src="assets/gtam1.png" alt="gtam1" class="sidebar-img"></li>
+		<li class="sidebar-item"><img src="assets/gtam2.png" alt="gtam2" class="sidebar-img"></li>
+		<li class="sidebar-item"><img src="assets/gtam3.png" alt="gtam3" class="sidebar-img"></li>
+	</ul>
+</aside>
+<button class="miku-mode-button" type="button" aria-pressed="false" title="Toggle Miku Mode">Miku Mode</button>
 <img id="toggleImage"
 src="assets/groan1.png"
 style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:center center; transform:translate(-50%,-50%) rotate(0deg); width:600px; max-width:80vw;">
 
 			<audio id="groanAudio" src="assets/groan1.mp3" preload="auto" playsinline></audio>
 			<audio id="groan2Audio" src="assets/groan2.mp3" preload="auto" playsinline></audio>
+			<audio id="mikuAudio" src="assets/ahway.wav" preload="auto" playsinline></audio>
+			<audio id="miku2Audio" src="assets/awa.wav" preload="auto" playsinline></audio>
 
 
 <div class="slider-wrap">
@@ -30,23 +143,36 @@ style="cursor:default; position:absolute; left:50%; top:50%; transform-origin:ce
 <footer class="site-footer">developer: Xotis360</footer>
 
 <script>
+const mikuModeButton = document.querySelector('.miku-mode-button');
+const toggleImage = document.getElementById('toggleImage');
+mikuModeButton.addEventListener('click', () => {
+	const isActive = mikuModeButton.getAttribute('aria-pressed') === 'true';
+	const mikuModeIsActive = !isActive;
+	mikuModeButton.setAttribute('aria-pressed', String(mikuModeIsActive));
+	toggleImage.src = mikuModeIsActive ? 'assets/miku.png' : 'assets/groan1.png';
+});
+
 function playAudio(audioEl) {
 	if (!audioEl) return;
 	try { audioEl.currentTime = 0; audioEl.play(); } catch (e) {}
 }
 
 function playGroanAudio(){
-	playAudio(document.getElementById('groanAudio'));
+	const audioId = mikuModeButton.getAttribute('aria-pressed') === 'true' ? 'mikuAudio' : 'groanAudio';
+	playAudio(document.getElementById(audioId));
 }
 
 function playGroan2Audio(){
-	playAudio(document.getElementById('groan2Audio'));
+	const audioId = mikuModeButton.getAttribute('aria-pressed') === 'true' ? 'miku2Audio' : 'groan2Audio';
+	playAudio(document.getElementById(audioId));
 }
 
 (function() {
 	const img = document.getElementById('toggleImage');
 	const slider = document.getElementById('rotationSlider');
-	const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+	const isMikuModeActive = () => mikuModeButton.getAttribute('aria-pressed') === 'true';
+	const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+		|| window.matchMedia('(max-width: 600px)').matches;
 	if (isMobile) {
 		document.body.classList.add('mobile');
 	}
@@ -98,14 +224,14 @@ function playGroan2Audio(){
 			if (sval === 0 && !sliderWasZero) {
 				sliderWasZero = true;
 				downTimer = clearTimer(downTimer);
-				try { img.src = 'assets/down.webp'; } catch (e) {}
+				if (!isMikuModeActive()) try { img.src = 'assets/down.webp'; } catch (e) {}
 				groanDelayTimer = clearTimer(groanDelayTimer);
 				groanDelayTimer = setTimeout(() => {
 					try { playGroanAudio(); } catch (e) {}
 					groanDelayTimer = null;
-				}, 1000);
+				}, 150);
 				downTimer = setTimeout(() => {
-					try { img.src = 'assets/groan1.png'; } catch (e) {}
+					if (!isMikuModeActive()) try { img.src = 'assets/groan1.png'; } catch (e) {}
 					downTimer = null;
 				}, 2000);
 			} else if (sval !== 0) {
@@ -119,9 +245,9 @@ function playGroan2Audio(){
 				upTimer = clearTimer(upTimer);
 				downTimer = clearTimer(downTimer);
 				groanDelayTimer = clearTimer(groanDelayTimer);
-				try { img.src = 'assets/upgran.webp'; } catch (e) {}
+				if (!isMikuModeActive()) try { img.src = 'assets/upgran.webp'; } catch (e) {}
 				downTimer = setTimeout(() => {
-					try { img.src = 'assets/rage.jpeg'; } catch (e) {}
+					if (!isMikuModeActive()) try { img.src = 'assets/rage.jpeg'; } catch (e) {}
 					downTimer = null;
 				}, 1050);
 			} else if (!wasInRange && sval <= 92) {
@@ -191,6 +317,15 @@ function playGroan2Audio(){
 			if (now - lastTapAt < 120) return;
 			lastTapAt = now;
 			mobileTapAltState = !mobileTapAltState;
+			if (isMikuModeActive()) {
+				img.src = mobileTapAltState ? 'assets/miku.png' : 'assets/mikudown.png';
+				if (mobileTapAltState) {
+					playGroan2Audio();
+				} else {
+					playGroanAudio();
+				}
+				return;
+			}
 			img.src = mobileTapAltState ? 'assets/groan2.png' : 'assets/groan1.png';
 			if (mobileTapAltState) {
 				playGroan2Audio();
